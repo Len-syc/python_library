@@ -1,0 +1,143 @@
+package sy7;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+
+public class Application {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrame frame = new JFrame("textFileViewer");
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setBounds(0, 0, 1280, 720);
+                frame.setVisible(true);
+                GridBagLayout gridBagLayout = new GridBagLayout();
+                // frame.setLayout(gridBagLayout);
+
+
+                JTextArea textArea = new JTextArea(
+                        "\n".repeat(10)
+                                + "\t".repeat(3)
+                                +"   ".repeat(7)
+                                + "请打开一个文件");
+                setFontSize(22, textArea);
+                textArea.setDisabledTextColor(Color.BLACK);
+                textArea.setLineWrap(true); // 设置自动换行
+                textArea.setWrapStyleWord(true); // 设置单词换行
+                textArea.setEnabled(false);
+
+
+                JScrollPane scrollPane = new JScrollPane(textArea);
+
+
+                JPanel panel = new JPanel();
+
+
+                JButton button_open = new JButton("打开");
+                addActionListenerOfButton(button_open, textArea, true);
+                JButton button_save = new JButton("保存");
+                addActionListenerOfButton(button_save, textArea, false);
+
+
+                panel.add(button_open);
+                panel.add(button_save);
+                frame.add(panel, BorderLayout.NORTH);
+                frame.add(scrollPane, BorderLayout.CENTER);
+
+                //reLayoutComponent(gridBagLayout, button_open, button_save, scrollPane);
+                //[ b_o ][ b_s ]
+                //[   text   ]like this
+            }
+        });
+    }
+
+
+    public static void showFileSelector(JTextArea textArea, Boolean isOpen) throws IOException {
+        int result;
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.home") + "/Desktop"));//设置其初始路径
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Text files (*.txt)", "txt"));//设置文件格式
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+
+        if (isOpen) {
+            result = fileChooser.showOpenDialog(null);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                loadFile(fileChooser.getSelectedFile(), textArea);
+                textArea.setEnabled(true);
+            } else {
+                System.out.println("未选择文件");
+            }
+
+        } else if (!isOpen) {
+            result = fileChooser.showSaveDialog(null);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                saveFile(textArea, fileChooser.getSelectedFile());
+                textArea.setText("\n".repeat(10)
+                        + "\t".repeat(3)
+                        +"   ".repeat(7)
+                        + "     保存成功\n"
+                        + "\t".repeat(3)
+                        +"   ".repeat(7) +
+                        "请打开一个文件");
+                textArea.setEnabled(false);
+            } else {
+                System.out.println("未确认保存");
+            }
+
+        } else {
+            System.out.println("未选择文件");
+        }
+
+    }
+
+    private static void saveFile(JTextArea textArea, File file) throws IOException {
+        String content = textArea.getText();
+        FileWriter fileWriter = new FileWriter(file);
+        fileWriter.write(content);
+        fileWriter.close();
+
+    }
+
+    public static void loadFile(File file, JTextArea textArea) throws IOException {
+
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        String line;
+        textArea.setText("");
+        while ((line = reader.readLine()) != null) {
+            textArea.append(line);
+            textArea.append("\n");
+        }
+        reader.close();
+    }
+
+    public static void addActionListenerOfButton(JButton button, JTextArea textArea, Boolean isOpen) {
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    showFileSelector(textArea, isOpen);
+                } catch (IOException e1) {
+
+                    e1.printStackTrace();
+                }
+
+            }
+        });
+
+    }
+
+    private static void setFontSize(int size, JComponent component) {
+        Font defaultFont = UIManager.getFont("Label.font");
+        Font font = new Font(String.valueOf(defaultFont), Font.PLAIN, size);
+        component.setFont(font);
+
+    }
+
+}
